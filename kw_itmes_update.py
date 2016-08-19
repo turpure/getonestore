@@ -5,10 +5,10 @@ import MySQLdb
 import datetime
 from multiprocessing.dummy import Pool as ThreadPool
 from ebaysdk.trading import Connection
+from functools import partial
 
-
-def update_items(item_details):
-	query = "update sxb_kw_items set deltasold=%s-quantitysold,quantitysold=%s,deltahit=%s-hitcount,hitcount=%s,deltadays=datediff(now(),curdate),curdate=now() where itemid=%s"
+def update_items(item_details,owner):
+	query = "update " + owner + "_kw_items set deltasold=%s-quantitysold,quantitysold=%s,deltahit=%s-hitcount,hitcount=%s,deltadays=datediff(now(),curdate),curdate=now() where itemid=%s"
 	try:
 		con = MySQLdb.connect(host='192.168.0.134',user='root',passwd='',db='ebaydata')
 		cur = con.cursor()
@@ -22,8 +22,8 @@ def update_items(item_details):
 		print e 
 
 
-def get_item_from_db():
-	query = "select itemid from sxb_kw_items"
+def get_item_from_db(owner):
+	query = "select itemid from " + owner + "_kw_items where datediff(curdate,startttime)<30;"
 	try:
 		con = MySQLdb.connect(host='192.168.0.134',user='root',passwd='',db='ebaydata')
 		cur = con.cursor()
@@ -54,21 +54,25 @@ def get_item_details(itemid):
 		print e
 	return item_details
 
-def handle(itemid):
+def handle(itemid,owner):
 	item_details = get_item_details(itemid)
-	update_items(item_details)
+	update_items(item_details,owner)
 
 
-def main():
-	pool = ThreadPool(20)
-	items_list_generator = get_item_from_db
-	pool.map(handle,items_list_generator())
+def main(a_owner):
+	partial_handle = partial(handle,owner=a_owner)
+	pool = ThreadPool(24)
+	pool.map(partial_handle,get_item_from_db(a_owner))
 	pool.close()
 	pool.join()
 
 
 if __name__ == "__main__":
-	main()
-
+	# print get_item_details('401172859387')
+	main('test')
+	# handle('401172859387','test')
+	# print [i for i in get_item_from_db('test')]
+	# partial_handle = partial(handle,owner='test')
+	# partial_handle('401172859387')
 
 
