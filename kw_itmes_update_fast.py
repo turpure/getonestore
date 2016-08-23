@@ -24,7 +24,7 @@ def update_items(item_details,owner):
 
 
 def get_item_from_db(owner):
-	query = "select itemid from " + owner + "_kw_items where datediff(curdate,startttime)<30;"
+	query = "select itemid from " + owner + "_kw_items where datediff(curdate,startttime)<45;"
 	try:
 		con = MySQLdb.connect(host='192.168.0.134',user='root',passwd='',db='ebaydata')
 		cur = con.cursor()
@@ -79,4 +79,4 @@ def main(a_owner):
 		print 'process is startting.....'
 
 if __name__ == "__main__":
-	main('test')
+	main('ymm')
